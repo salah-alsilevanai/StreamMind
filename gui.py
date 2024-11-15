@@ -175,7 +175,7 @@ entry_2.place(
 # Text elements
 prompt_text = canvas.create_text(
     50.0,
-    581.0,
+    568.0,
     anchor="nw",
     text="Prompt:",
     fill="#000000",
@@ -183,8 +183,8 @@ prompt_text = canvas.create_text(
 )
 
 response_text = canvas.create_text(
-    50.0,
-    28.0,
+    54.0,
+    15.0,
     anchor="nw",
     text="Response:",
     fill="#000000",
