@@ -1,5 +1,5 @@
 from pathlib import Path
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, StringVar, scrolledtext
+from tkinter import Tk, Canvas, Button, scrolledtext, PhotoImage
 from tkinter.font import Font
 import requests
 import json
@@ -12,8 +12,22 @@ ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\salah\Documents\repos\ai_interface\b
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
+# Global variable to manage request state
+ongoing_request_event = None
+ongoing_request_thread = None
+
 # Function to send prompt to API and display response
 def handle_prompt():
+    global ongoing_request_event, ongoing_request_thread
+
+    # If there is an ongoing request, cancel it
+    if ongoing_request_event is not None:
+        ongoing_request_event.set()  # Signal the thread to stop
+        ongoing_request_thread.join()  # Wait for the previous thread to finish safely
+
+    # Create a new event to control the new thread
+    ongoing_request_event = threading.Event()
+    
     def fetch_response():
         prompt = entry_2.get("1.0", "end-1c")  # Get the prompt from the Text widget
         if not prompt.strip():
@@ -31,6 +45,8 @@ def handle_prompt():
                 if response.status_code == 200:
                     entry_1.delete("1.0", "end")  # Clear the Text widget before updating
                     for line in response.iter_lines(decode_unicode=True):
+                        if ongoing_request_event.is_set():
+                            return  # Stop processing if the request was cancelled
                         if line:
                             try:
                                 parsed_line = json.loads(line)
@@ -47,8 +63,9 @@ def handle_prompt():
             entry_1.delete("1.0", "end")
             entry_1.insert("1.0", f"Error: {e}")
 
-    # Run the fetch_response function in a new thread
-    threading.Thread(target=fetch_response).start()
+    # Start the new thread
+    ongoing_request_thread = threading.Thread(target=fetch_response)
+    ongoing_request_thread.start()
 
 def round_rectangle(x1, y1, x2, y2, radius=25, **kwargs):
     points = [
@@ -97,14 +114,6 @@ canvas = Canvas(
 # Create a canvas to hold the GUI elements
 canvas.place(x=0, y=0)
 
-# # Create the response text box
-# entry_image_1 = PhotoImage(
-#     file=relative_to_assets("entry_1.png"))
-# entry_bg_1 = canvas.create_image(
-#     536.0,
-#     304.0,
-#     image=entry_image_1
-# )
 # Add a rounded rectangle for the response box background
 round_rectangle(55, 40, 1005, 570, radius=20, fill="#D9D9D9", outline="#000000")
 
@@ -144,14 +153,6 @@ button_1.place(
     height=73.0
 )
 
-# # Create the prompt text area
-# entry_image_2 = PhotoImage(
-#     file=relative_to_assets("entry_2.png"))
-# entry_bg_2 = canvas.create_image(
-#     471.0,
-#     639.5,
-#     image=entry_image_2
-# )
 # Add a rounded rectangle for the prompt box background
 round_rectangle(50, 595, 885, 690, radius=20, fill="#D9D9D9", outline="#000000")
 
@@ -193,4 +194,3 @@ response_text = canvas.create_text(
 
 window.resizable(True, True)
 window.mainloop()
-
