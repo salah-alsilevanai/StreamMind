@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        textarea, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Interface</h1>
+        <form id="promptForm">
+            <textarea id="prompt" name="prompt" rows="5" placeholder="Enter your prompt..."></textarea>
+            <button type="submit">Send</button>
+        </form>
+        <div id="response" class="response"></div>
+    </div>
+    <script>
+        const form = document.getElementById('promptForm');
+        const responseDiv = document.getElementById('response');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = document.getElementById('prompt').value;
+            responseDiv.textContent = "Loading...";
+
+            const formData = new FormData();
+            formData.append("prompt", prompt);
+
+            try {
+                const res = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.response) {
+                    responseDiv.textContent = data.response;
+                } else if (data.error) {
+                    responseDiv.textContent = `Error: ${data.error}`;
+                }
+            } catch (err) {
+                responseDiv.textContent = `Request failed: ${err.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
