@@ -7,7 +7,7 @@ import threading
 
 # Paths for Tkinter Designer assets
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\salah\Documents\repos\ai_interface\build\assets\frame0")
+ASSETS_PATH = OUTPUT_PATH / Path(r".\build\assets\frame0")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
