@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 import json
+import qrcode, socket
 
 app = Flask(__name__)
 
@@ -38,7 +39,46 @@ def generate():
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+def generate_qr_code(url):
+    """Generates a QR code for the given URL and displays it in the CLI."""
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
 
+    # Print the QR code in the CLI
+    qr.print_ascii(invert=True)
+
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=5000)
+
+def get_local_ip():
+    """Returns the local IP address of the machine (connected to the local network)."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Doesn't matter which address we use here, as long as it's routable.
+        s.connect(("8.8.8.8", 80))  # Google's public DNS
+        local_ip = s.getsockname()[0]
+    except Exception:
+        local_ip = "127.0.0.1"  # Fallback to localhost
+    finally:
+        s.close()
+    return local_ip
+
+if __name__ == "__main__":
+    # Get the machine's local IP address
+    host_ip = get_local_ip()
+    port = 5000
+    url = f"http://{host_ip}:{port}/"
+    print(f"Starting Flask app on {url}")
+    
+    # Generate and display the QR code
+    print("\nScan this QR code to access the app:")
+    generate_qr_code(url)
+
+    app.run(host="0.0.0.0", port=port)
 
